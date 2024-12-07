@@ -1,0 +1,10 @@
+{
+  "Name": "Dynamic Map Tiles - Extended",
+  "Author": "MindMeltMax",
+  "Version": "1.0.0",
+  "Description": "Adds a lot of new tile actions to enhance maps",
+  "UniqueID": "MindMeltMax.DMT",
+  "EntryDll": "Dynamic Map Tiles Extended.dll",
+  "MinimumApiVersion": "4.0.0",
+  "UpdateKeys": [ "nexus:X" ]
+}
