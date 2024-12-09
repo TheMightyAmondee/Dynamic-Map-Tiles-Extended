@@ -228,7 +228,7 @@ namespace DMT.Data
         {
             TemporaryAnimatedSprite? sprite = null;
             //string[] split2;
-            if (!string.IsNullOrWhiteSpace(Texture))
+            if (string.IsNullOrWhiteSpace(Texture) == false)
             {
                 try
                 {
