@@ -227,7 +227,7 @@ namespace DMT.Data
         public TemporaryAnimatedSprite? ToSAnim()
         {
             TemporaryAnimatedSprite? sprite = null;
-            string[] split2 = [];
+            //string[] split2;
             if (!string.IsNullOrWhiteSpace(Texture))
             {
                 try

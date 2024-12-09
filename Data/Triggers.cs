@@ -19,7 +19,7 @@
         public const string TalkToNPCRegex = @"Talk(\([A-z]{1,}\)){0,1}";
         public const string MonsterSlainRegex = @"MonsterSlain(\([A-z]{1,}\)){0,1}";
 
-        public static readonly HashSet<string> Regexes = [
+        public static readonly HashSet<string> Regexes = new HashSet<string>() {
             StepOn,
             StepOff,
             EnterLocation,
@@ -30,13 +30,14 @@
             UseToolRegex,
             UseItemRegex,
             TalkToNPCRegex,
-            MonsterSlainRegex,
-        ];
+            MonsterSlainRegex
+        };
 
-        public static readonly HashSet<string> GlobalTriggers = [
+        public static readonly HashSet<string> GlobalTriggers = new HashSet<string>()
+        {
             EnterLocation,
             TalkToNPCRegex,
-            MonsterSlainRegex,
-        ];
+            MonsterSlainRegex               
+        };
     }
 }

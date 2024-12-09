@@ -43,8 +43,8 @@ namespace DMT.Data
         public const string SlipperyKey = "DMT/slippery";
         public const string WarpKey = "DMT/warp";
 
-        public static readonly List<string> AllKeys =
-        [
+        public static readonly List<string> AllKeys = new List<string>() 
+        {
             AddLayerKey,
             AddTilesheetKey,
             ChangeIndexKey,
@@ -78,8 +78,8 @@ namespace DMT.Data
             EmoteKey,
             AnimationKey,
             WarpKey
-        ];
+        };
 
-        public static readonly HashSet<string> ModKeys = [];
+        public static readonly HashSet<string> ModKeys = new HashSet<string>();
     }
 }

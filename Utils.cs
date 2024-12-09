@@ -20,8 +20,10 @@ namespace DMT
         {
             foreach (var trigger in triggers)
             {
-                if (!trigger.Equals(property.Trigger, StringComparison.OrdinalIgnoreCase) && !trigger.Contains(property.Trigger, StringComparison.OrdinalIgnoreCase))
+                if (trigger.Equals(property.Trigger, StringComparison.OrdinalIgnoreCase) == false && trigger.Contains(property.Trigger, StringComparison.OrdinalIgnoreCase) == false)
+                {
                     continue;
+                }
                 return true;
             }
             return false;
@@ -35,40 +37,48 @@ namespace DMT
                 1 => new(1, 0),
                 2 => new(0, 1),
                 3 => new(-1, 0),
-                _ => new(0) //This will never be hit, but I don't like my IDE complaining with colorfull squiqly lines
+                _ => new(0) //Default
             };
         }
 
         public static bool PushTiles(GameLocation l, List<(Point p, Tile t)> tiles, int dir, Farmer f)
         {
+            string[] stringtrigger = { "Push" };
             for (int i = 0; i < tiles.Count; i++)
             {
                 var destination = tiles[i].p + GetNextTile(dir);
-                if (!l.isTileOnMap(tiles[i].p) || !l.isTileOnMap(destination) || 
+                if (l.isTileOnMap(tiles[i].p) == false || l.isTileOnMap(destination) == false ||
                     (
                         tiles[i].t.Layer.Tiles[destination.X, destination.Y] is Tile t &&
-                        (t.HasProperty(Keys.PushKey, out _) || t.HasProperty(Keys.PushableKey, out _)) &&
-                        !tiles.Any(x => x.p == destination && x.t.Layer.Id == tiles[i].t.Layer.Id)
+                        (t.HasProperty(Keys.PushKey, out _) == true || t.HasProperty(Keys.PushableKey, out _) == true) &&
+                        tiles.Any(x => x.p == destination && x.t.Layer.Id == tiles[i].t.Layer.Id) == false
                     ))
+                {
                     return false;
+                }
+
             }
-            if (!Context.PushTileDict.TryGetValue(l.Name, out var pushed))
-                Context.PushTileDict[l.Name] = pushed = [];
+
+            if (Context.PushTileDict.TryGetValue(l.Name, out var pushed) == false)
+            {
+                Context.PushTileDict[l.Name] = pushed;
+            }
+
             for (int i = 0; i < tiles.Count; i++)
             {
                 var (p, t) = tiles[i];
-                if (t.Layer.Id == "Buildings")
-                    TriggerActions([t.Layer], f, p, ["Push"]);
+                if (t.Layer.Id == "Buildings") { TriggerActions(new List<Layer>{ t.Layer }, f, p, stringtrigger); }                  
                 pushed.Add(new() { Tile = t, Position = new(p.X * 64, p.Y * 64), Direction = dir, Farmer = f });
                 tiles[i].t.Layer.Tiles[p.X, p.Y] = null;
             }
+            
             return true;
         }
 
         public static void PushTilesWithOthers(Farmer f, Tile t, Point start)
         {
-            List<(Point, Tile)> tiles = [(start, t)];
-            if (!t.HasProperty(Keys.PushAlsoKey, out var others))
+            List<(Point, Tile)> tiles = new List<(Point, Tile)> { (start, t) };
+            if (t.HasProperty(Keys.PushAlsoKey, out var others) == false)
             {
                 _ = PushTiles(f.currentLocation, tiles, f.FacingDirection, f);
                 return;
@@ -79,16 +89,23 @@ namespace DMT
                 try
                 {
                     var other = tile.Split(' ');
-                    if (split.Length != 3 || !int.TryParse(other[1], out int x) || !int.TryParse(other[2], out int y))
+                    if (split.Length != 3 || int.TryParse(other[1], out int x) == false || int.TryParse(other[2], out int y) == false)
+                    {
                         continue;
+                    }
                     x += start.X;
                     y += start.Y;
                     var layer = f.currentLocation.Map.GetLayer(other[0]);
-                    if (layer is null || !f.currentLocation.isTileOnMap(x, y) || layer.Tiles[x, y] is not Tile otherTile)
+                    if (layer is null || f.currentLocation.isTileOnMap(x, y) == false || layer.Tiles[x, y] is not Tile otherTile)
+                    {
                         continue;
+                    }  
                     tiles.Add((new(x, y), otherTile));
                 }
-                catch { } //Write logging here, just not now, it's late again (2:39AM)... Why the fuck do I keep working on this so late!
+                catch(Exception ex) 
+                { 
+                    monitor.Log($"An error occureed trying to push a tile.\n{ex}", LogLevel.Error); 
+                }
             }
             PushTiles(f.currentLocation, tiles, f.FacingDirection, f);
         }
@@ -104,7 +121,9 @@ namespace DMT
         {
             var texture = Context.Helper.GameContent.Load<Texture2D>(texturePath);
             if (texture == null)
+            {
                 return null;
+            }                
             var tilesheet = new TileSheet(id, map, texturePath, new xSize(texture.Width / 16, texture.Height / 16), new xSize(16, 16));
             map.AddTileSheet(tilesheet);
             return tilesheet;
@@ -113,7 +132,7 @@ namespace DMT
         internal static Item? ParseItemString(string value)
         {
             Item item = null;
-            string[] split = [];
+            string[] split;
 
             try
             {
@@ -123,13 +142,15 @@ namespace DMT
             {
                 int amount = 1;
                 int quality = 0;
-                if (value.Contains(','))
+                if (value.Contains(',') == true)
                 {
                     split = value.Split(',');
                     value = split[0];
                     amount = int.Parse(split[1]);
                     if (split.Length == 3)
+                    {
                         quality = int.Parse(split[2]);
+                    }                        
                 }
                 item = ItemRegistry.Create(value, amount, quality);
             }
@@ -140,8 +161,13 @@ namespace DMT
         internal static DynamicTileProperty? GetInternalProperty(string id)
         {
             foreach (var prop in Context.InternalProperties.Value)
-                if (prop.Key == id)
+            {
+                if (prop.Key == id) 
+                {
                     return prop.Value;
+                }                
+            }
+                
             return null;
         }
 
@@ -151,19 +177,23 @@ namespace DMT
             string key = old.Key;
             foreach (var item in Keys.AllKeys.Union(Keys.ModKeys).OrderByDescending(x => x.Length))
             {
-                if (!key.StartsWith(item, StringComparison.OrdinalIgnoreCase))
-                    continue; 
+                if (key.StartsWith(item, StringComparison.OrdinalIgnoreCase) == false)
+                {
+                    continue;
+                }                    
                 prop.Key = item;
                 key = key.Replace(item, "");
                 break;
             }
-            if (string.IsNullOrWhiteSpace(prop.Key))
+
+            if (string.IsNullOrWhiteSpace(prop.Key) == true)
             {
                 //Context.Monitor.Log($"Found unknown key {key} when parsing old property format, this property will be ignored", LogLevel.Warn);
                 return null;
             }
+
             key = key.Trim('_');
-            if (key.StartsWith("Once", StringComparison.OrdinalIgnoreCase))
+            if (key.StartsWith("Once", StringComparison.OrdinalIgnoreCase) == true)
             {
                 prop.Once = true;
                 key = key[4..];
@@ -171,12 +201,14 @@ namespace DMT
             key = key.Trim('_');
             foreach (var item in Triggers.Regexes)
             {
-                if (!Regex.IsMatch(key, item))
+                if (Regex.IsMatch(key, item) == false)
+                {
                     continue;
+                }                   
                 prop.Trigger = key;
                 break;
             }
-            if (string.IsNullOrWhiteSpace(prop.Trigger))
+            if (string.IsNullOrWhiteSpace(prop.Trigger) == true)
             {
                 Context.Monitor.Log($"Found unknown trigger {key} when parsing old property format, this property will be ignored", LogLevel.Warn);
                 return null;
@@ -186,11 +218,11 @@ namespace DMT
 
         internal static List<DynamicTileProperty> FilterProperties(List<DynamicTileProperty> properties)
         {
-            List<string> keys = [];
-            List<DynamicTileProperty> filtered = [];
+            List<string> keys = new List<string>();
+            List<DynamicTileProperty> filtered = new List<DynamicTileProperty>();
             foreach (var prop in properties)
             {
-                if (keys.Contains(prop.Key))
+                if (keys.Contains(prop.Key) == true)
                 {
                     Context.Monitor.Log($"Found duplicate key {prop.Key}{(string.IsNullOrWhiteSpace(prop.LogName) ? "" : $" For named property {prop.LogName}")}, This property was automatically filtered out. Please avoid adding duplicate actions for tiles", LogLevel.Warn);
                     continue;
@@ -204,13 +236,18 @@ namespace DMT
 
         internal static string BuildFormattedTrigger(params object[]? parts)
         {
-            if (!(parts?.Any() ?? false))
+            if ((parts?.Any() ?? false) == false)
+            {
                 return "";
-
+            }
+                
             StringBuilder sb = new();
             sb.Append('(');
             foreach (var part in parts)
+            {
                 sb.Append(part);
+            }
+                
             sb.Append(')');
             return sb.ToString();
         }
@@ -218,9 +255,14 @@ namespace DMT
         internal static bool IsGlobalTrigger(string trigger)
         {
             foreach (var item in Triggers.GlobalTriggers)
+            {
                 if (Regex.IsMatch(trigger, item))
+                {
                     return true;
-
+                }
+                    
+            }
+               
             return false;
         }
 
@@ -228,9 +270,11 @@ namespace DMT
 
         public static bool TriggerActions(List<Layer> layers, Farmer who, Point tilePosition, string[] triggers)
         {
-            if (!Enabled || !who.currentLocation.isTileOnMap(tilePosition) || (!Context.Config.TriggerDuringEvents && Game1.eventUp))
+            if (Enabled == false || who.currentLocation.isTileOnMap(tilePosition) == false || (Context.Config.TriggerDuringEvents == false && Game1.eventUp == true))
+            {
                 return false;
-
+            }
+                
             bool triggered = false;
             List<(DynamicTileProperty prop, Tile tile)> properties = GetPropertiesForTriggers(layers, who, tilePosition, triggers);
             /*foreach (var layer in layers)
@@ -360,7 +404,7 @@ namespace DMT
                             break;
                     }
 
-                    if (!found && Keys.ModKeys.Contains(item.prop.key))
+                    if (found == false && Keys.ModKeys.Contains(item.prop.key) == true)
                     {
                         Actions.ModActions[item.prop.Key]?.Invoke(who, value, tile, tilePosition);
                         triggered = true;
@@ -380,46 +424,62 @@ namespace DMT
 
         internal static List<(DynamicTileProperty prop, Tile tile)> GetPropertiesForTriggers(List<Layer> layers, Farmer who, Point tilePosition, IEnumerable<string> triggers)
         {
-            List<string> localTriggers = [];
-            List<string> globalTriggers = [];
-            List<(DynamicTileProperty prop, Tile tile)> properties = [];
-            foreach (var trigger in (string[])[.. triggers])
+            List<string> localTriggers = new List<string>();
+            List<string> globalTriggers = new List<string>();
+            List<(DynamicTileProperty prop, Tile tile)> properties = new List<(DynamicTileProperty prop, Tile tile)>();
+            foreach (var trigger in (string[])triggers)
             {
-                if (IsGlobalTrigger(trigger))
+                if (IsGlobalTrigger(trigger) == true)
+                {
                     globalTriggers.Add(trigger);
+                }
                 else
+                {
                     localTriggers.Add(trigger);
+                }                  
             }
 
             if (globalTriggers.Count > 0)
+            {
                 properties.AddRange(GetPropertiesForGlobalTriggers(layers, who, globalTriggers));
+            }
+                
             if (localTriggers.Count > 0)
+            {
                 properties.AddRange(GetPropertiesForLocalTriggers(layers, who, tilePosition, localTriggers));
-
+            }
+                
             return properties;
         }
 
         internal static List<(DynamicTileProperty prop, Tile tile)> GetPropertiesForLocalTriggers(List<Layer> layers, Farmer who, Point tilePosition, IEnumerable<string> triggers)
         {
-            List<(DynamicTileProperty prop, Tile tile)> properties = [];
+            List<(DynamicTileProperty prop, Tile tile)> properties = new List<(DynamicTileProperty prop, Tile tile)>();
             foreach (var layer in layers)
             {
                 var tile = layer.Tiles[tilePosition.X, tilePosition.Y];
 
                 if (tile is null)
+                {
                     continue;
-                string[] props = [.. tile.Properties.Keys];
+                }
+                    
+                string[] props = tile.Properties.Keys.ToArray();
 
                 foreach (var key in props)
                 {
-                    DynamicTileProperty? prop = !key.StartsWith("DMT_PROP_INTERNAL") ? ParseOldProperty(new(key, tile.Properties[key])) : GetInternalProperty(tile.Properties[key]);
+                    DynamicTileProperty? prop = key.StartsWith("DMT_PROP_INTERNAL") == false ? ParseOldProperty(new(key, tile.Properties[key])) : GetInternalProperty(tile.Properties[key]);
 
-                    if (prop is null || !CheckTrigger(prop, triggers))
+                    if (prop is null || CheckTrigger(prop, triggers) == false)
+                    {
                         continue;
+                    }
 
-                    if (prop.Once)
+                    if (prop.Once == true)
+                    {
                         tile.Properties.Remove(key);
-
+                    }
+                        
                     properties.Add(new(prop, tile));
                 }
             }
@@ -428,7 +488,7 @@ namespace DMT
 
         internal static List<(DynamicTileProperty prop, Tile tile)> GetPropertiesForGlobalTriggers(List<Layer> layers, Farmer who, IEnumerable<string> triggers)
         {
-            List<(DynamicTileProperty prop, Tile tile)> properties = [];
+            List<(DynamicTileProperty prop, Tile tile)> properties = new List<(DynamicTileProperty prop, Tile tile)>();
             int width = layers[0].Tiles.Array.GetLength(0);
             int height = layers[0].Tiles.Array.GetLength(1);
             for (int x = 0; x < width; x++)
@@ -440,19 +500,26 @@ namespace DMT
                         var tile = layer.Tiles[x, y];
 
                         if (tile is null)
+                        {
                             continue;
-                        string[] props = [.. tile.Properties.Keys];
+                        }
+
+                        string[] props = tile.Properties.Keys.ToArray();
 
                         foreach (var key in props)
                         {
-                            DynamicTileProperty? prop = !key.StartsWith("DMT_PROP_INTERNAL") ? ParseOldProperty(new(key, tile.Properties[key])) : GetInternalProperty(tile.Properties[key]);
+                            DynamicTileProperty? prop = key.StartsWith("DMT_PROP_INTERNAL") == false ? ParseOldProperty(new(key, tile.Properties[key])) : GetInternalProperty(tile.Properties[key]);
 
                             if (prop is null || !CheckTrigger(prop, triggers))
+                            {
                                 continue;
+                            }
 
-                            if (prop.Once)
+                            if (prop.Once == true)
+                            {
                                 tile.Properties.Remove(key);
-
+                            }
+                                
                             properties.Add(new(prop, tile));
                         }
                     }
@@ -470,10 +537,12 @@ namespace DMT
         /// </remarks>
         internal static void LoadLocation(GameLocation l)
         {
-            if (!Context.Config.Enabled)
+            if (Context.Config.Enabled == false)
+            {
                 return;
+            }
+
             var dict = Context.Helper.GameContent.Load<Dictionary<string, DynamicTile>>(Context.TileDataDictPath);
-            Context.InternalProperties.Value = [];
             int internalPropCounter = 0;
             foreach (var item in dict)
             {
@@ -482,13 +551,17 @@ namespace DMT
                 var value = item.Value;
                 var tileSheets = l.Map.TileSheets.ToList();
 
-                if (!IsValidLocation(value, l))
+                if (IsValidLocation(value, l) == false)
+                {
                     continue;
+                }
 
                 foreach (var layer in l.Map.Layers)
                 {
-                    if (!(value.Layers?.Contains(layer.Id) ?? true))
+                    if ((value.Layers?.Contains(layer.Id) ?? true) == false)
+                    {
                         continue;
+                    }
                     int width = layer.Tiles.Array.GetLength(0);
                     int height = layer.Tiles.Array.GetLength(1);
                     for (int x = 0; x < width; x++)
@@ -497,13 +570,19 @@ namespace DMT
                         {
                             var tile = layer.Tiles[x, y];
                             if (tile is null)
+                            {
                                 continue;
+                            }
                             Point tilePoint = new(x, y);
-                            if (!IsValidTile(value, tile, tilePoint))
+                            if (IsValidTile(value, tile, tilePoint) == false)
+                            {
                                 continue;
+                            }
                             count++;
                             foreach (var prop in value.Properties)
+                            {
                                 layer.Tiles[x, y].Properties[prop.Key] = prop.Value;
+                            }                                
                             foreach (var action in value.Actions)
                             {
                                 ++count2;
@@ -522,8 +601,11 @@ namespace DMT
         {
             propertyValue = null;
             if (t is null || t.Properties is null || t.Properties.Count == 0)
+            {
                 return false;
-            if (t.Properties.TryGetValue(key, out var prop))
+            }
+                
+            if (t.Properties.TryGetValue(key, out var prop) == true)
             {
                 propertyValue = prop;
                 return true;
@@ -531,10 +613,15 @@ namespace DMT
 
             foreach (var item in t.Properties)
             {
-                if (!item.Key.StartsWith("DMT_PROP_INTERNAL"))
+                if (item.Key.StartsWith("DMT_PROP_INTERNAL") == false)
+                {
                     continue;
-                if (!Context.InternalProperties.Value[item.Value].Key.Equals(key, StringComparison.OrdinalIgnoreCase))
+                }
+                    
+                if (Context.InternalProperties.Value[item.Value].Key.Equals(key, StringComparison.OrdinalIgnoreCase) == false)
+                {
                     continue;
+                }
                 propertyValue = item.Value;
                 return true;
             }
@@ -545,43 +632,61 @@ namespace DMT
         internal static bool IsValidLocation(DynamicTile tileData, GameLocation l)
         {
             var tileSheets = l.Map.TileSheets.ToList();
-            if (!(tileData.Properties?.Any() ?? false) && !(tileData.Actions?.Any() ?? false))
+            if ((tileData.Properties?.Any() ?? false) == false && (tileData.Actions?.Any() ?? false) == false)
+            {
                 return false;
+            }
 
             if (tileData.Locations is not null && 
                 tileData.Locations.Count > 0 && 
-                !tileData.Locations.Contains(l.Name))
+                tileData.Locations.Contains(l.Name) == false)
+            {
                 return false;
+            }
 
             if (tileData.TileSheets is not null && 
                 tileData.TileSheets.Count > 0 && 
-                !tileData.TileSheets.Exists(x => tileSheets.Exists(y => y.Id == x)))
+                tileData.TileSheets.Exists(x => tileSheets.Exists(y => y.Id == x) == true) == false)
+            {
                 return false;
+            }
 
             if (tileData.TileSheetsPaths is not null && 
                 tileData.TileSheetsPaths.Count > 0 && 
-                !tileData.TileSheetsPaths.Exists(x => tileSheets.Exists(y => y.ImageSource.Contains(x))))
+                tileData.TileSheetsPaths.Exists(x => tileSheets.Exists(y => y.ImageSource.Contains(x) == true)) == false)
+            {
                 return false;
+            }
 
             return true;
         }
 
         internal static bool IsValidTile(DynamicTile tileData, Tile tile, Point tilePoint)
         {
-            if (tileData.TileSheets is not null && tileData.TileSheets.Count > 0 && !tileData.TileSheets.Contains(tile.TileSheet.Id))
+            if (tileData.TileSheets is not null && tileData.TileSheets.Count > 0 && tileData.TileSheets.Contains(tile.TileSheet.Id) == false)
+            {
                 return false;
+            }
 
-            if (tileData.TileSheetsPaths is not null && tileData.TileSheetsPaths.Count > 0 && !tileData.TileSheetsPaths.Exists(tile.TileSheet.ImageSource.Contains))
+            if (tileData.TileSheetsPaths is not null && tileData.TileSheetsPaths.Count > 0 && tileData.TileSheetsPaths.Exists(tile.TileSheet.ImageSource.Contains) == false)
+            {
                 return false;
+            }
 
-            if (tileData.Indexes is not null && tileData.Indexes.Count > 0 && !tileData.Indexes.Contains(tile.TileIndex))
+            if (tileData.Indexes is not null && tileData.Indexes.Count > 0 && tileData.Indexes.Contains(tile.TileIndex) == false)
+            {
                 return false;
+            }
 
-            if (tileData.Rectangles is not null && tileData.Rectangles.Count > 0 && !tileData.Rectangles.Exists(x => x.Contains(tilePoint)))
+            if (tileData.Rectangles is not null && tileData.Rectangles.Count > 0 && tileData.Rectangles.Exists(x => x.Contains(tilePoint) == true) == false)
+            {
                 return false;
+            }
 
-            if (tileData.Tiles is not null && tileData.Tiles.Count > 0 && !tileData.Tiles.Contains(new(tilePoint.X, tilePoint.Y)))
+            if (tileData.Tiles is not null && tileData.Tiles.Count > 0 && tileData.Tiles.Contains(new(tilePoint.X, tilePoint.Y)) == false)
+            {
                 return false;
+            }
 
             return true;
         }

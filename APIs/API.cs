@@ -10,7 +10,7 @@ namespace DMT.APIs
     {
         public bool TriggerActions(IEnumerable<Layer> layers, Farmer who, Point tilePosition, IEnumerable<string> triggers)
         {
-            return Utils.TriggerActions([.. layers], who, tilePosition, [.. triggers]);
+            return Utils.TriggerActions(layers.ToList(), who, tilePosition, (string[])triggers);
         }
 
         public bool AddGlobalTrigger(string regex) => Triggers.GlobalTriggers.Add(regex);

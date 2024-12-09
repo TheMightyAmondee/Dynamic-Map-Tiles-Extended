@@ -11,7 +11,7 @@ namespace DMT
 {
     public static class Actions
     {
-        public static readonly Dictionary<string, Action<Farmer, string, Tile, Point>> ModActions = [];
+        public static readonly Dictionary<string, Action<Farmer, string, Tile, Point>> ModActions = new Dictionary<string, Action<Farmer, string, Tile, Point>>();
 
         public static void DoAddLayer(Farmer who, string value) => AddLayer(who.currentLocation.map, value);
 
@@ -19,44 +19,54 @@ namespace DMT
         {
             var split = value.Split(',');
             if (split.Length == 2)
+            {
                 AddTileSheet(who.currentLocation.map, split[0], split[1]);
+            }
+                
         }
 
         public static void DoChangeIndex(Farmer who, string value, Tile tile, Point tilePos)
         {
-            if (string.IsNullOrEmpty(value))
+            if (string.IsNullOrEmpty(value) == true)
             {
                 tile.Layer.Tiles[tilePos.X, tilePos.Y] = null;
                 return;
             }
-            if (int.TryParse(value, out int num))
+            if (int.TryParse(value, out int num) == true)
             {
                 if (tile.Layer.Tiles[tilePos.X, tilePos.Y] is null)
+                {
                     tile.Layer.Tiles[tilePos.X, tilePos.Y] = new StaticTile(tile.Layer, tile.TileSheet, BlendMode.Alpha, num);
+                }
                 else
+                {
                     tile.Layer.Tiles[tilePos.X, tilePos.Y].TileIndex = num;
+                }
+                    
                 return;
             }
-            if (value.Contains(','))
+            if (value.Contains(',') == true)
             {
                 var indecesDuration = value.Split(',');
                 var indeces = indecesDuration[0].Split(' ');
-                List<StaticTile> tiles = [];
+                List<StaticTile> tiles = new List<StaticTile>();
                 foreach (var index in indeces)
                 {
-                    if (int.TryParse(index, out num))
+                    if (int.TryParse(index, out num) == true)
+                    {
                         tiles.Add(new StaticTile(tile.Layer, tile.TileSheet, BlendMode.Alpha, num));
-                    else if (index.ToString().Contains('/'))
+                    }                       
+                    else if (index.ToString().Contains('/') == true)
                     {
                         var sheetIndex = index.ToString().Split('/');
                         tiles.Add(new StaticTile(tile.Layer, who.currentLocation.Map.GetTileSheet(sheetIndex[0]), BlendMode.Alpha, int.Parse(sheetIndex[1])));
                     }
-
                 }
                 tile.Layer.Tiles[tilePos.X, tilePos.Y] = new AnimatedTile(tile.Layer, tiles.ToArray(), int.Parse(indecesDuration[1]));
                 return;
             }
-            if (value.Contains('/'))
+
+            if (value.Contains('/') == true)
             {
                 var sheetIndex = value.Split('/');
                 tile.Layer.Tiles[tilePos.X, tilePos.Y] = new StaticTile(tile.Layer, who.currentLocation.Map.GetTileSheet(sheetIndex[0]), BlendMode.Alpha, int.Parse(sheetIndex[1]));
@@ -72,36 +82,40 @@ namespace DMT
                 var layerXY = pair[0].Split(' ');
                 var l = who.currentLocation.Map.GetLayer(layerXY[0]);
                 l ??= AddLayer(who.currentLocation.Map, layerXY[0]);
-                if (string.IsNullOrEmpty(pair[1]))
+
+                if (string.IsNullOrEmpty(pair[1]) == true)
                 {
                     l.Tiles[int.Parse(layerXY[1]), int.Parse(layerXY[2])] = null;
                     return;
                 }
-                if (int.TryParse(pair[1], out int num))
+                if (int.TryParse(pair[1], out int num) == true)
                 {
                     l.Tiles[int.Parse(layerXY[1]), int.Parse(layerXY[2])] = new StaticTile(l, tile.TileSheet, BlendMode.Alpha, num);
                     return;
                 }
-                if (pair[1].Contains(','))
+                if (pair[1].Contains(',') == true)
                 {
                     var indexesDuration = pair[1].Split(',');
                     var indexes = indexesDuration[0].Split(' ');
-                    List<StaticTile> tiles = [];
+                    List<StaticTile> tiles = new List<StaticTile>();
                     foreach (var index in indexes)
                     {
-                        if (int.TryParse(index, out num))
+                        if (int.TryParse(index, out num) == true)
+                        {
                             tiles.Add(new StaticTile(l, tile.TileSheet, BlendMode.Alpha, num));
-                        else if (index.Contains('/'))
+                        }
+                            
+                        else if (index.Contains('/') == true)
                         {
                             var sheetIndex = index.Split('/');
                             tiles.Add(new StaticTile(l, who.currentLocation.Map.GetTileSheet(sheetIndex[0]), BlendMode.Alpha, int.Parse(sheetIndex[1])));
                         }
 
                     }
-                    l.Tiles[int.Parse(layerXY[1]), int.Parse(layerXY[2])] = new AnimatedTile(l, [.. tiles], int.Parse(indexesDuration[1]));
+                    l.Tiles[int.Parse(layerXY[1]), int.Parse(layerXY[2])] = new AnimatedTile(l, tiles.ToArray(), int.Parse(indexesDuration[1]));
                     return;
                 }
-                if (pair[1].Contains('/'))
+                if (pair[1].Contains('/') == true)
                 {
                     var sheetIndex = pair[1].Split('/');
                     l.Tiles[int.Parse(layerXY[1]), int.Parse(layerXY[2])] = new StaticTile(tile.Layer, who.currentLocation.Map.GetTileSheet(sheetIndex[0]), BlendMode.Alpha, int.Parse(sheetIndex[1]));
@@ -117,9 +131,14 @@ namespace DMT
             {
                 var pair = prop.Split('=');
                 if (pair.Length == 2)
+                {
                     tile.Properties[pair[0]] = pair[1];
+                }
                 else
+                {
                     tile.Properties.Remove(pair[0]);
+                }
+                    
             }
         }
 
@@ -152,29 +171,40 @@ namespace DMT
             var split = value.Split('|');
             for (int i = 0; i < split.Length; i++)
             {
-                if (split[i].Contains(','))
+                if (split[i].Contains(',') == true)
                 {
                     var split2 = split[i].Split(',');
-                    if (int.TryParse(split2[1], out int delay))
+                    if (int.TryParse(split2[1], out int delay) == true)
+                    {
                         DelayedAction.playSoundAfterDelay(split2[0], delay, who.currentLocation);
+                    }                       
                     continue;
                 }
                 if (i == 0)
+                {
                     who.currentLocation.playSound(split[i]);
+                }
+
                 else
+                {
                     DelayedAction.playSoundAfterDelay(split[i], i * 300, who.currentLocation);
+                }
+                    
             }
         }
 
         public static void DoShowMessage(string value)
         {
-            if (value.Contains('|'))
+            if (value.Contains('|') == true)
             {
                 var split = value.Split('|');
                 var letter = bool.Parse(split[0]);
                 value = split[1];
                 if (letter)
+                {
                     Game1.drawLetterMessage(value);
+                }
+                    
                 return;
             }
 
@@ -183,17 +213,19 @@ namespace DMT
 
         public static void DoPlayEvent(string value)
         {
-            if (!value.Contains('|'))
+            if (!value.Contains('|') == true)
             {
                 Game1.currentLocation.currentEvent = new(value, null, null);
                 Game1.currentLocation.checkForEvents();
                 return;
             }
+
             var split = value.Split('|');
             var eventStr = split[0];
             var assetName = split[1];
             string assetKey = "";
-            if (assetName.Contains('#'))
+
+            if (assetName.Contains('#') == true)
             {
                 var split2 = assetName.Split('#');
                 assetName = split2[0];
@@ -201,7 +233,7 @@ namespace DMT
             }
             var eventId = split[2];
 
-            if (!string.IsNullOrWhiteSpace(eventStr) && Context.Helper.GameContent.Load<Dictionary<string, string>>(assetName).TryGetValue(assetKey, out eventStr))
+            if (string.IsNullOrWhiteSpace(eventStr) == false && Context.Helper.GameContent.Load<Dictionary<string, string>>(assetName).TryGetValue(assetKey, out eventStr) == true)
             {
                 Game1.currentLocation.currentEvent = new(eventStr, assetName, eventId);
                 Game1.currentLocation.checkForEvents();
@@ -216,61 +248,90 @@ namespace DMT
 
         public static void DoAddMailForTomorrow(Farmer who, string value)
         {
-            if (!who.mailbox.Contains(value))
+            if (who.mailbox.Contains(value) == false)
+            {
                 who.mailbox.Add(value);
+            }
+                
         }
 
         public static void DoInvalidateAsset(string value)
         {
             foreach (var asset in value.Split('|'))
+            {
                 Context.Helper.GameContent.InvalidateCache(asset);
+            }
+                
         }
 
         public static void DoTeleport(Farmer who, string value)
         {
             var split = value.Split(' ');
-            if (split.Length != 2 || !int.TryParse(split[0], out int x) || !int.TryParse(split[1], out int y))
+            if (split.Length != 2 || int.TryParse(split[0], out int x) == false || int.TryParse(split[1], out int y) == false)
+            {
                 return;
+            }
             who.Position = new Vector2(x, y);
         }
 
         public static void DoTeleportTile(Farmer who, string value)
         {
             var split = value.Split(' ');
-            if (split.Length != 2 || !int.TryParse(split[0], out int x) || !int.TryParse(split[1], out int y))
+            if (split.Length != 2 || int.TryParse(split[0], out int x) == false || int.TryParse(split[1], out int y) == false)
+            {
                 return;
+            }
             who.Position = new Vector2(x * 64, y * 64);
         }
 
         public static void DoGive(Farmer who, string value)
         {
             Item? item = null;
-            if (value.StartsWith("Money/"))
+            if (value.StartsWith("Money/") == true)
             {
-                if (int.TryParse(value.Split('/')[1], out int number))
+                if (int.TryParse(value.Split('/')[1], out int number) == true)
+                {
                     who.addUnearnedMoney(number);
+                }
+                    
             }
             else
+            {
                 item = ParseItemString(value);
+            }
+                
             if (item is null)
+            {
                 return;
+            }
             who.holdUpItemThenMessage(item, false);
-            if (!who.addItemToInventoryBool(item, false))
+            if (who.addItemToInventoryBool(item, false) == false)
+            {
                 Game1.createItemDebris(item, who.getStandingPosition(), who.FacingDirection);
+            }
+                
         }
 
         public static void DoTake(Farmer who, string value)
         {
             Item? item = null;
-            if (value.StartsWith("Money/"))
+            if (value.StartsWith("Money/") == true)
             {
-                if (int.TryParse(value.Split('/')[1], out int number))
+                if (int.TryParse(value.Split('/')[1], out int number) == true)
+                {
                     who.Money -= number;
+                }
+                    
             }
             else
+            {
                 item = ParseItemString(value);
-            if (item is null || !who.Items.ContainsId(item.ItemId))
+            }
+                
+            if (item is null || who.Items.ContainsId(item.ItemId) == false)
+            {
                 return;
+            }
             who.Items.ReduceId(item.ItemId, item.Stack);
         }
 
@@ -279,12 +340,14 @@ namespace DMT
             var split = value.Split('=');
             var split2 = split[0].Split(' ');
             Vector2 tilePos = new(int.Parse(split2[0]), int.Parse(split2[1]));
-            if (who.currentLocation.Objects.TryGetValue(tilePos, out var obj) && obj is Chest)
+            if (who.currentLocation.Objects.TryGetValue(tilePos, out var obj) == true && obj is Chest)
+            {
                 return;
+            }
             int coins = 0;
             string? chestId = null;
-            List<Item> items = [];
-            if (split[1].Contains('|'))
+            List<Item> items = new List<Item>();
+            if (split[1].Contains('|') == true)
             {
                 split = split[1].Split('|');
                 chestId = split[0];
@@ -292,20 +355,29 @@ namespace DMT
             split2 = split[1].Split(' ');
             foreach (var str in split2)
             {
-                if (str.StartsWith("Money/"))
+                if (str.StartsWith("Money/") == true)
+                {
                     _ = int.TryParse(str.Split('/')[1], out coins);
+                }
+                   
                 else
                 {
                     var item = ParseItemString(str);
                     if (item is not null)
+                    {
                         items.Add(item);
+                    }
+                        
                 }
             }
             if (coins > 0)
+            {
                 items.Add(ItemRegistry.Create("(O)GoldCoin", coins));
+            }
+                
             Chest chest = new(items, tilePos);
 
-            if (!string.IsNullOrWhiteSpace(chestId))
+            if (string.IsNullOrWhiteSpace(chestId) == false)
             {
                 var itemData = ItemRegistry.GetData("(BC)" + chestId);
                 chest.SetBigCraftableSpriteIndex(itemData.SpriteIndex, lid_frame_count: 5);
@@ -325,8 +397,10 @@ namespace DMT
 
         public static void DoUpdateHealth(Farmer who, string value)
         {
-            if (!int.TryParse(value, out int number))
+            if (int.TryParse(value, out int number) == false)
+            {
                 return;
+            }
             if (number > 0)
             {
                 who.health = Math.Min(who.health + number, who.maxHealth);
@@ -338,28 +412,38 @@ namespace DMT
 
         public static void DoUpdateHealthPerSecond(Farmer who, string value)
         {
-            if (!value.Contains('|'))
+            if (value.Contains('|') == false)
+            {
                 return;
+            }
             var split = value.Split('|');
-            if (!int.TryParse(split[0], out int loops) || !int.TryParse(split[1], out int number))
+            if (int.TryParse(split[0], out int loops) == false || int.TryParse(split[1], out int number) == false)
+            {
                 return;
+            }
             Context.SecondUpdateLoops.Value = new() { Loops = loops, Value = number, IsHealth = true, Who = who };
         }
 
         public static void DoUpdateStamina(Farmer who, string value)
         {
-            if (!float.TryParse(value, out var number))
+            if (float.TryParse(value, out var number) == false)
+            {
                 return;
+            }
             who.Stamina += number;
         }
 
         public static void DoUpdateStaminaPerSecond(Farmer who, string value)
         {
-            if (!value.Contains('|'))
+            if (value.Contains('|') == false)
+            {
                 return;
+            }
             var split = value.Split('|');
-            if (!int.TryParse(split[0], out int loops) || !float.TryParse(split[1], out var number))
+            if (int.TryParse(split[0], out int loops) == false || float.TryParse(split[1], out var number) == false)
+            {
                 return;
+            }
             Context.SecondUpdateLoops.Value = new() { Loops = loops, FloatValue = number, IsHealth = false, Who = who };
         }
 
@@ -367,7 +451,7 @@ namespace DMT
         {
             foreach (var item in value.Split('|'))
             {
-                if (!item.Contains(','))
+                if (item.Contains(',') == false)
                 {
                     who.applyBuff(item);
                     continue;
@@ -379,8 +463,10 @@ namespace DMT
 
         public static void DoEmote(Farmer who, string value)
         {
-            if (!int.TryParse(value, out int id))
+            if (int.TryParse(value, out int id) == false)
+            {
                 return;
+            }
             who.doEmote(id);
         }
 
@@ -394,40 +480,65 @@ namespace DMT
             int radius = 1;
             Vector2 pos = new(tilePos.X, tilePos.Y);
 
-            if (split.Length == 7 && !string.IsNullOrWhiteSpace(split[6]))
+            if (split.Length == 7 && string.IsNullOrWhiteSpace(split[6]) == false)
+            {
                 explodeSound = split[6];
-            if (split.Length >= 6 && !string.IsNullOrWhiteSpace(split[5]))
+            }
+                
+            if (split.Length >= 6 && string.IsNullOrWhiteSpace(split[5]) == false)
+            {
                 destroyObjects = bool.Parse(split[5]);
-            if (split.Length >= 5 && !string.IsNullOrWhiteSpace(split[4]))
+            }
+                
+            if (split.Length >= 5 && string.IsNullOrWhiteSpace(split[4]) == false)
+            {
                 damageRadius = int.Parse(split[4]);
-            if (split.Length >= 4 && !string.IsNullOrWhiteSpace(split[3]))
+            }
+                
+            if (split.Length >= 4 && string.IsNullOrWhiteSpace(split[3]) == false)
+            {
                 damagesFarmer = bool.Parse(split[3]);
-            if (split.Length >= 3 && !string.IsNullOrWhiteSpace(split[2]))
+            }
+                
+            if (split.Length >= 3 && string.IsNullOrWhiteSpace(split[2]) == false)
+            {
                 radius = int.Parse(split[2]);
-            if (split.Length > 1 && !string.IsNullOrWhiteSpace(split[0]) && !string.IsNullOrWhiteSpace(split[1]))
+            }
+                
+            if (split.Length > 1 && string.IsNullOrWhiteSpace(split[0]) == false && string.IsNullOrWhiteSpace(split[1]) == false)
+            {
                 pos = new(int.Parse(split[0]), int.Parse(split[1]));
-
-
+            }
+                
             who.currentLocation.playSound(explodeSound);
             who.currentLocation.explode(pos, radius, who, damagesFarmer, damageRadius, destroyObjects);
         }
 
         public static void DoAnimate(Farmer who, string value)
         {
-            if (!value.Contains(','))
+            if (value.Contains(',') == false)
+            {
                 return;
+            }
             Animation? anim;
             var opt = value.Split(',');
             if (opt.Length == 2)
             {
-                if (!Context.AnimationsDict.TryGetValue(opt[0], out var anims))
+                if (Context.AnimationsDict.TryGetValue(opt[0], out var anims) == false)
+                {
                     return;
+                }
                 anim = anims?.Find(x => x.Name.Equals(opt[1], StringComparison.OrdinalIgnoreCase));
             }
             else
+            {
                 anim = JsonConvert.DeserializeObject<Animation>(value);
+            }
+                
             if (anim?.ToSAnim() is not TemporaryAnimatedSprite sprite)
+            {
                 return;
+            }
 
             who.currentLocation.removeTemporarySpritesWithIDLocal(sprite.id);
             who.currentLocation.TemporarySprites.Add(sprite);
@@ -456,7 +567,7 @@ namespace DMT
         {
             var split = value.Split(',');
             int x, y;
-            if (split.Length == 2 || string.IsNullOrWhiteSpace(split[0]))
+            if (split.Length == 2 || string.IsNullOrWhiteSpace(split[0]) == true)
             {
                 x = int.Parse(split[0]);
                 y = int.Parse(split[1]);
