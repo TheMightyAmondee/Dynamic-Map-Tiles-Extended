@@ -62,7 +62,7 @@ namespace DMT
 
         private void onOneSecondUpdate(object? sender, OneSecondUpdateTickedEventArgs e)
         {
-            if (Config.Enabled== false || SContext.IsPlayerFree == false || SecondUpdateLoops.Value.Loops <= 0)
+            if (Config.Enabled == false || SContext.IsPlayerFree == false || SecondUpdateLoops.Value.Loops <= 0)
             {
                 return;
             }
@@ -95,7 +95,7 @@ namespace DMT
                 var AnimationsDict = Helper.GameContent.Load<Dictionary<string, List<Animation>>>(AnimationDataDictPath);
             }
 
-            if (e.NamesWithoutLocale.Any(x => x.IsEquivalentTo(TileDataDictPath)) && SContext.IsWorldReady)
+            if (e.NamesWithoutLocale.Any(x => x.IsEquivalentTo(TileDataDictPath)) && SContext.IsWorldReady == true)
             {
                 LoadLocation(Game1.player.currentLocation);
             }               

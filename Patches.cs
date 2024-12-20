@@ -83,7 +83,7 @@ namespace DMT
 
         internal static void GameLocation_ExplosionAt_Postfix(GameLocation __instance, float x, float y)
         {
-            if (Enabled == false || __instance.isTileOnMap(new Vector2(x, y)) == false || (Context.Config.TriggerDuringEvents == false && Game1.eventUp == true == true))
+            if (Enabled == false || __instance.isTileOnMap(new Vector2(x, y)) == false || (Context.Config.TriggerDuringEvents == false && Game1.eventUp == true))
             {
                 return;
             }
@@ -201,7 +201,7 @@ namespace DMT
 
         internal static void Farmer_GetMovementSpeed_Postfix(Farmer __instance, ref float __result)
         {
-            if (Enabled == false || (Context.Config.TriggerDuringEvents == false && Game1.eventUp == true == true) || __instance.currentLocation is null)
+            if (Enabled == false || (Context.Config.TriggerDuringEvents == false && Game1.eventUp == true) || __instance.currentLocation is null)
             {
                 return;
             }
