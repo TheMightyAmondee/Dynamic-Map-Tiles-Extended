@@ -213,9 +213,9 @@ namespace DMT
                     if (f.movementDirections.Contains(1))
                         f.xVelocity = Math.Max(f.xVelocity + amount, .16f);
                     if (f.movementDirections.Contains(2))
-                        f.yVelocity = Math.Max(f.xVelocity - amount, -.16f);
+                        f.yVelocity = -Math.Max(Math.Abs(f.yVelocity) + amount, .16f);
                     if (f.movementDirections.Contains(3))
-                        f.xVelocity = Math.Max(f.yVelocity - amount, -.16f);
+                        f.xVelocity = -Math.Max(Math.Abs(f.xVelocity) + amount, .16f);
                 }
             }
 
