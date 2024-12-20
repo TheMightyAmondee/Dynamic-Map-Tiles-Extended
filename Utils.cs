@@ -510,7 +510,7 @@ namespace DMT
                         {
                             DynamicTileProperty? prop = key.StartsWith("DMT_PROP_INTERNAL") == false ? ParseOldProperty(new(key, tile.Properties[key])) : GetInternalProperty(tile.Properties[key]);
 
-                            if (prop is null || !CheckTrigger(prop, triggers))
+                            if (prop is null || CheckTrigger(prop, triggers) == false)
                             {
                                 continue;
                             }
